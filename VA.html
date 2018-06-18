@@ -5,117 +5,115 @@
 <head>
  <script type="text/javascript" src="d3.min.js"></script>
  <script type="text/javascript" src="bar.js"></script>
- <script> 
- function bar(name){
-		d3.csv("Lekagul Sensor Data.csv").then(function(data){
-			var base = data;
-		//	console.log(base);
-			var ordered = d3.nest()
-					.key(function(d){return d['car-type'];})
-					.entries(data);
-	
-	//	console.log(ordered);
-		var h = document.getElementById(name).scrollHeight;
-		var w = document.getElementById(name).offsetWidth;
-		
-		var canvas = d3.select("#"+name)
-								.append("svg")
-								.attr("width",h)
-								.attr("height",w)
-								.attr("transform","translate("+ w/8 +","+ h/6 +")");
-//	var max = d3.max(data, function(d){return d['car-type'];});
-//	console.log(max);
-
-		var i;
-		count = [];
-		for (i=0; i< ordered.length; i++){
-			count[i] = ordered[i].values.length;
-		}
-		
-		var max = d3.max(ordered,function(d){return d.values.lenght;});
-		var widthScale = d3.scaleLinear()
-							.domain([0,d3.max(count)])
-							.range([0,450])
-	
-		var heightScale = d3.scaleLinear()
-							.domain([0,10])
-							.range([0,400])
-	
-		canvas.selectAll("rect")
-					.data(ordered)
-					.enter()
-					.append("rect")
-					.attr("width",function (d){return widthScale(d.values.length);})
-					.attr("height", 30)
-					.attr("y", function(d,i){return heightScale(i);})
-					.attr("x", 50)
-					.attr("fill","blue")
-					
-		canvas.selectAll("text")
-					.data(ordered)
-					.enter()
-					.append("text")
-					.attr("fill","black")
-					.attr("y", function(d,i){return heightScale(i)+20;})
-					.text(function(d) {return d.key;});
-			
-		});
-};
- function test(name) {
-	var svgContainer = d3.select("#"+name).append("svg")
-                                     .attr("width", 200)
-                                     .attr("height", 200);
- 
- //Draw the Rectangle
- var rectangle = svgContainer.append("rect")
-                             .attr("x", 10)
-                             .attr("y", 10)
-                            .attr("width", 50)
-                            .attr("height", 100)
-							.attr("transform","translate("+20+","+20+")");
-
-};
- 
- </script>
+ <script type="text/javascript" src="scripts.js"></script>
  <style>
-	.container div{
+	
+	
+	.container{
 		background-color: white;
 		border-radius: 5px;
 		border: 1px solid black;
-		height:400px; width:49%;
-		
+		height:500px; width:49.6%;		
+		}
+	
+	.axis path,
+	.axis line {
+		fill: none;
+		stroke:none;
+		shape-rendering: crispEdges;
+	}
+ 
+	.axis text {
+		font-family: sans-serif;
+		font-size: 11px;
+	}
+ 
+	.navbar {
+    overflow: hidden;
+    background-color: #333;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+	.navbar input {
+		float: left;
+		font-size: 16px;
+		color: white;
+		text-align: center;
+		padding: 14px 16px;
+		text-decoration: none;
+	}
+	
+	.button {
+		background-color: #333;
+		font-family: Arial, Helvetica, sans-serif;	
+		padding: 0;
+		border: none;
+	}
+	
+	.navbar input:hover, .dropdown:hover .dropbtn {
+    background-color: red;
+}
+	.header {
+		background-color: #578CA9;
+		text-align: center;
+		overflow:hidden;
+		font-family: Arial, Helvetica, sans-serif;
+	
 	}
  </style>
  
  
 </head>
 <body>
-	 <div style = "background-color:#b5dcb3; width:100%">
+	 <div class = "header">
             <h1>Visual Analytics 2018</h1>
      </div>
-      <div class="container" style = "width:100%">
+      <div style = "width:100%">
 				
-         <div id="a" style = "float:left;" >
-         </div>
+         <div class="container"  id="a" style = "float:left;" >
+			<div class="navbar">
+			  <input type="button" class="button" value="Enlarge">
+			  <input type="button" class="button" value="Compare">
+			  <div class="dropdown">
+			 </div> 
+			</div>
+        </div>
 		
-         <div id="b" style = "float:right;">
-            
+         <div class="container" id="b" style = "float:right;">
+            <div class="navbar">
+			  <input type="button" class="button" value="Enlarge">
+			  <input type="button" class="button" value="Compare">
+			  <div class="dropdown">
+			 </div> 
+			</div>
          </div>
 			
-         <div id="c" style = "float:left">
-           
+         <div class="container" id="c" style = "float:left">
+           <div class="navbar">
+			  <input type="button" class="button" value="Enlarge">
+			  <input type="button" class="button" value="Compare">
+			  <div class="dropdown">
+			 </div> 
+			</div>
          </div>
 			
-		 <div id="d" style = "float:right">
-           
+		 <div class="container" id="d" style = "float:right">
+           <div class="navbar">
+			  <input type="button" class="button" value="Enlarge">
+			  <input type="button" class="button" value="Compare">
+			  <div class="dropdown">
+			 </div> 
+			</div>
          </div>
 			
+		 
+		
       </div>
-
-	<script type="text/javascript"> 
 	
+	<script type="text/javascript"> 
 	bar("a");
-	test("b");
+	scatter("b");
+
 	</script> 
 </body>
 </html> 
