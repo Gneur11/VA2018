@@ -4,21 +4,11 @@
 <meta charset="utf-8"> 
 <head>
  <script type="text/javascript" src="d3.min.js"></script>
- <script type="text/javascript" src="scripts.js"></script>
  <script type="text/javascript" src="nv.d3.js"></script>
+ <script type="text/javascript" src="scripts.js"></script>
 
  <style>
-	
-	
-	.container{
-		background-color: white;
-		border-radius: 5px;
-		border: 1px solid black;
-		height:500px; width:49%;		
-		margin-bottom:20px;
-		margin-top:20px;
-		}
-	
+		
 	.axis path,
 	.axis line {
 		fill: none;
@@ -31,12 +21,6 @@
 		font-size: 11px;
 	}
  
-	.navbar {
-    overflow: hidden;
-    background-color: #333;
-    font-family: Arial, Helvetica, sans-serif;
-	}
-	
 	.header {
     overflow: hidden;
     background-color: #333;
@@ -45,7 +29,35 @@
 	color: white;
 	}
 	
-	.navbar input {
+	.header input{
+		float:center;
+		font-size:10px;
+		color:white;
+		text-align:center;
+	}
+	
+	.header input:hover {
+		background-color:red;
+		}
+	
+		.container{
+		background-color: white;
+		border-radius: 5px;
+		border: 1px solid black;
+		height:500px; width:49%;		
+		margin-bottom:20px;	
+		margin-top:20px;
+		z-index:0;
+		}
+
+	
+	.navbar {
+    overflow: hidden;
+    background-color: #333;
+    font-family: Arial, Helvetica, sans-serif;
+	}
+	
+	.navbar input, .navbar button {
 		float: left;
 		font-size: 16px;
 		color: white;
@@ -66,28 +78,29 @@
 }
 
 	}
+
  </style>
  
  
 </head>
 <body>
+
 	 <div class = "header">
-            <h1>Visual Analytics 2018</h1>
-     </div>
+          <h1>Visual Analytics 2018</h1>
+		  <input type="button" class="button" value="Reduce" onclick="reduce()">
+		  <input type="button" class="button" value="Enlarge" onclick="enlarge()">
+		  
+	 </div> 
       <div style = "width:100%">
 				
          <div class="container"  id="a" style = "float:left;" >
 			<div class="navbar">
-			  <input type="button" class="button" value="Enlarge">
 			  <input type="button" class="button" value="Compare">
-			  <div class="dropdown">
-			 </div> 
 			</div>
         </div>
 		
          <div class="container" id="b" style = "float:right;">
             <div class="navbar">
-			  <input type="button" class="button" value="Enlarge">
 			  <input type="button" class="button" value="Compare">
 			  <div class="dropdown">
 			 </div> 
@@ -96,7 +109,6 @@
 			
          <div class="container" id="c" style = "float:left">
            <div class="navbar">
-			  <input type="button" class="button" value="Enlarge">
 			  <input type="button" class="button" value="Compare">
 			  <div class="dropdown">
 			 </div> 
@@ -105,7 +117,6 @@
 			
 		 <div class="container" id="d" style = "float:right">
            <div class="navbar">
-			  <input type="button" class="button" value="Enlarge">
 			  <input type="button" class="button" value="Compare">
 			  <div class="dropdown">
 			 </div> 
@@ -113,13 +124,12 @@
          </div>
 			
 		 
-		
-      </div>
-	
+      </div>	
 	<script type="text/javascript"> 
 	bar("a");
 	scatter("b");
 	time("c");
+
 	</script> 
 </body>
 </html> 
