@@ -57,7 +57,7 @@
     font-family: Arial, Helvetica, sans-serif;
 	}
 	
-	.navbar input, .navbar button {
+	.navbar input, .navbar button, .back input {
 		float: left;
 		font-size: 16px;
 		color: white;
@@ -66,19 +66,30 @@
 		text-decoration: none;
 	}
 	
-	.button {
+	.button, .back button {
 		background-color: #333;
 		font-family: Arial, Helvetica, sans-serif;	
 		padding: 0;
 		border: none;
 	}
 	
-	.navbar input:hover, .dropdown:hover .dropbtn {
+	.navbar input:hover, .dropdown:hover .dropbtn, .back input:hover {
     background-color: red;
 }
 
 	}
 
+.filter {
+	float:left;
+	display:inline;
+	width: 200px;
+	height: 20px;
+}
+
+.back {
+	float:right;
+	display:none;
+	}
  </style>
  
  
@@ -96,6 +107,18 @@
          <div class="container"  id="a" style = "float:left;" >
 			<div class="navbar">
 			  <input type="button" class="button" value="Compare">
+			  <div id="backA" class="back"> 
+				<input type="button" class="button" onclick="back()" value="Back" >
+			</div>
+
+			</div>
+			<div class="filter">
+			<select id="filterA" onchange="initChangeA()">
+				<option value="total"> General </option>
+				<option value="2015"> Year(2015) </option>
+				<option value="2016"> Year(2016) </option>
+				<option value ="Month"> Monthly </option> 
+			 </select>
 			</div>
         </div>
 		
@@ -112,21 +135,23 @@
 			  <input type="button" class="button" value="Compare">
 			  <div class="dropdown">
 			 </div> 
-			</div>
+			</div> 
          </div>
 			
 		 <div class="container" id="d" style = "float:right">
            <div class="navbar">
 			  <input type="button" class="button" value="Compare">
 			  <div class="dropdown">
-			 </div> 
+			 </div>
 			</div>
+			<text> force directed graph </text>
          </div>
 			
 		 
       </div>	
 	<script type="text/javascript"> 
-	bar("a");
+	
+	bar();
 	scatter("b");
 	time("c");
 
