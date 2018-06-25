@@ -1,4 +1,4 @@
-var margin = {top: 40, right: 10, bottom: 150, left: 50};
+var margin = {top: 40, right: 10, bottom: 150, left: 60};
 
 var currentGraphs = {"a": "bar", "b": "scatter", "c":"time","d":"none",
 					"inputA":"a","inputB":"b","inputC":"c","inputD":"none",
@@ -15,7 +15,7 @@ function back(){
 	x = document.getElementById("backA");
 	x.style.display = "none";
 	bar();
-}
+}	
 		
 function bar(){
 		var name = "a";
@@ -40,7 +40,7 @@ function bar(){
 		currentGraphs.filterA = filter;
 		auxBar(ordered,name);
 		});
-		} else if (filter == "2016"  || filter == "2015"){
+		} else if (filter == "2016"  || filter == "2015" || filter == "month"){
 			d3.csv("Lekagul Sensor Data.csv").then(function(data){
 				if(filter == "2016"){
 						currentGraphs.a = "bar";
@@ -77,12 +77,189 @@ function bar(){
 								.entries(base)
 								.sort(function(a, b){ return d3.descending(a.values, b.values);});
 							auxBar(ordered,name);
+				} else if (filter == "month"){
+					d3.csv("Lekagul Sensor Data.csv").then(function(data){
+						var base = data;
+						var parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
+						var format = d3.timeFormat("%m-%y");
+						base.forEach(function(d,i) {   
+							var time = parseTime(d.Timestamp);
+							d.Timestamp = format(time);
+							})						
+					//	base = base.filter(function(d) {return d['Timestamp'] == "16";})
+						var ordered = d3.nest()
+								.key(function(d){return d['car-type'];})
+								.key(function(d) {return d['Timestamp'];})
+								.rollup(function (v) {return v.length;}) //va bene così
+								.entries(base)
+							//	.sort(function(a, b){ return d3.descending(a.values, b.values);});
+						console.log(ordered);
+						multiLine(ordered,name);
+						//metti parallel coordinates
+					})		
 				}
 			})
-		};
-		
-		
+		};		
 };
+
+function multiLine(data,name) {
+			var h = document.getElementById(name).clientHeight;
+			var w = document.getElementById(name).offsetWidth;
+			    w = w - margin.left - margin.right;
+				h = h - margin.top - margin.bottom;
+			
+			var x = d3.scaleLinear().range([0, w-20]),
+			y = d3.scaleLinear().domain([19000,0]).range([0,h]);
+			
+			var xAxis = d3.axisBottom(x);
+			var yAxis = d3.axisLeft(y);			
+			x.domain([0,12]);
+			
+			var z = d3.scaleOrdinal(d3.schemeCategory10);
+			z.domain(data, function(d){return d.key;}); //mappa per ogni tipo di veicolo il coloro 
+			var cols = [];
+			var rows= data.length;
+			for (var i  = 0; i < rows; i++){
+			     cols[i] = [];}
+			var i;
+			for(i=0;i<data.length;i++){
+				var j;
+				for(j=0;j<data[i].values.length;j++){
+					cols[i][j]=(data[i].values[j].value);
+				}
+			}
+			console.log(cols);		
+			var line = d3.line()
+						.x(function(d,i) {return x(i);})
+						.y(function(d,i) {return y(d.value);})			
+			var da0 = [];
+				for (var j=0; j<data[0].values.length; j++){
+					var linedata = {"type": data[0].key,"month": data[0].values[j].key, "value":+data[0].values[j].value}
+					da0.push(linedata);
+				}
+			var da1 = [];
+				for (var j=0; j<data[1].values.length; j++){
+					var linedata = {"type": data[1].key,"month": data[1].values[j].key, "value":+data[1].values[j].value}
+					da1.push(linedata);
+				}
+			var da2 = [];
+				for (var j=0; j<data[2].values.length; j++){
+					var linedata = {"type": data[2].key,"month": data[2].values[j].key, "value":+data[2].values[j].value}
+					da2.push(linedata);
+				}
+			var da3 = [];
+				for (var j=0; j<data[3].values.length; j++){
+					var linedata = {"type": data[3].key,"month": data[3].values[j].key, "value":+data[3].values[j].value}
+					da3.push(linedata);
+				}
+			var da4 = [];
+				for (var j=0; j<data[1].values.length; j++){
+					var linedata = {"type": data[4].key,"month": data[4].values[j].key, "value":+data[4].values[j].value}
+					da4.push(linedata);
+				}
+			var da5 = [];
+				for (var j=0; j<data[1].values.length; j++){
+					var linedata = {"type": data[5].key,"month": data[5].values[j].key, "value":+data[5].values[j].value}
+					da5.push(linedata);
+				}
+			var da6 = [];
+				for (var j=0; j<data[1].values.length; j++){
+					var linedata = {"type": data[6].key,"month": data[6].values[j].key, "value":+data[6].values[j].value}
+					da6.push(linedata);
+				}			
+			var svg = d3.select("#"+name).append("svg")
+					.attr("id", "svg"+name)
+					.attr("width", w + margin.left + margin.right)
+					.attr("height", h + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+				
+			svg.append("text")             
+				  .attr("transform",
+						"translate(" + (w/2) + " ," + 
+									   (h + margin.top) + ")")
+				  .style("text-anchor", "middle")
+				  .text("Month");
+			
+			svg.append("text")
+				.attr("transform", "rotate(-90)")
+				  .attr("y", 0 - margin.left)
+				  .attr("x",0 - (h / 2))
+				  .attr("dy", "1em")
+				  .style("text-anchor", "middle")
+				  .text("Number of readings");     
+			
+			svg.append("g")
+				  .attr("transform", "translate(0," + h + ")")
+				  .call(d3.axisBottom(x));
+			
+			svg.append("g")
+			  .style("font","8px times")
+			  .call(d3.axisLeft(y))
+				
+			console.log(z(da0[0].type));
+			svg.append("path")
+				.datum(da0)
+				.attr("fill","none")
+				.attr("stroke",z(da0[0].type))
+				.attr("class","line")
+				.attr("stroke-width",1.5)
+				.attr("d",line);
+			
+			svg.append("path")
+				.datum(da1)
+				.attr("fill","none")
+				.attr("stroke",z(da1[0].type))
+				.attr("class","line")
+				.attr("stroke-width",1.5)
+				.attr("d",line);
+			
+			svg.append("path")
+				.datum(da2)
+				.attr("fill","none")
+				.attr("stroke",z(da2[0].type))
+				.attr("class","line")
+				.attr("stroke-width",1.5)
+				.attr("d",line);
+			
+			svg.append("path")
+				.datum(da3)
+				.attr("fill","none")
+				.attr("stroke",z(da3[0].type))
+				.attr("class","line")
+				.attr("stroke-width",1.5)
+				.attr("d",line);
+			
+			svg.append("path")
+				.datum(da4)
+				.attr("fill","none")
+				.attr("stroke",z(da4[0].type))
+				.attr("class","line")
+				.attr("stroke-width",1.5)
+				.attr("d",line);
+			
+			svg.append("path")
+				.datum(da5)
+				.attr("fill","none")
+				.attr("stroke",z(da5[0].type))
+				.attr("class","line")
+				.attr("stroke-width",1.5)
+				.attr("d",line);
+			
+			svg.append("path")
+				.datum(da6)
+				.attr("fill","none")
+				.attr("stroke",z(da6[0].type))
+				.attr("class","line")
+				.attr("stroke-width",1.5)
+				.attr("d",line);			
+			
+			
+  }							
+							  
+			 
+
+
 
 function auxBar(data,name){
 			var h = document.getElementById(name).clientHeight;
@@ -178,7 +355,8 @@ function auxBar(data,name){
 function gateBar(key){
 	var b = document.getElementById("backA");
 	b.style.display = "block";
-	d3.csv("Lekagul Sensor Data.csv").then(function(data){
+	
+	d3.csv("Lekagul Sensor Data.csv").then(function(data, pisellFilter){ // passalo come funzione e returnalo PORCODIO 
 			console.log(key);
 			var filter = currentGraphs.filterA;
 			var filtered; 
@@ -294,9 +472,6 @@ function gateBar(key){
 												return "#fb9a99"; //rosa gates 
 											}
 									})
-					.on("click", function(){d3.select("#svga").remove();
-											bar("a");
-											});
 	});	
 }
 
@@ -417,7 +592,7 @@ function time(name){
 			var ordered1 = d3.nest()
 						.key(function(d){return d['key'];})
 						.entries(ordered);
-			//console.log(ordered1);
+			console.log(ordered1);
 			
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
@@ -530,3 +705,4 @@ function reduce(){
 	c = currentGraphs.c;
 	this[c](currentGraphs.inputC);
 }	
+
