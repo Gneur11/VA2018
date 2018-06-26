@@ -1,4 +1,4 @@
-var margin = {top: 40, right: 10, bottom: 150, left: 60};
+var margin = {top: 40, right: 20, bottom: 50, left: 60};
 
 var currentGraphs = {"a": "bar", "b": "scatter", "c":"time","d":"none",
 					"inputA":"a","inputB":"b","inputC":"c","inputD":"none",
@@ -106,21 +106,23 @@ function multiLine(data,name) {
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
 			    w = w - margin.left - margin.right;
-				h = h - margin.top - margin.bottom;
+				h = h - margin.top - margin.bottom- 100;
 			
-			var x = d3.scaleLinear().range([0, w-20]),
+			var x = d3.scaleBand().rangeRound([0, w]),
 			y = d3.scaleLinear().domain([19000,0]).range([0,h]);
 			
 			var xAxis = d3.axisBottom(x);
 			var yAxis = d3.axisLeft(y);			
-			x.domain([0,12]);
+			
 			
 			var z = d3.scaleOrdinal(d3.schemeCategory10);
 			z.domain(data, function(d){return d.key;}); //mappa per ogni tipo di veicolo il coloro 
 			var cols = [];
+			var months = [];
 			var rows= data.length;
 			for (var i  = 0; i < rows; i++){
-			     cols[i] = [];}
+			     cols[i] = []
+					months[i] = [];}
 			var i;
 			for(i=0;i<data.length;i++){
 				var j;
@@ -128,15 +130,21 @@ function multiLine(data,name) {
 					cols[i][j]=(data[i].values[j].value);
 				}
 			}
+			
 			console.log(cols);		
 			var line = d3.line()
-						.x(function(d,i) {return x(i);})
+						.x(function(d,i){return x(d.month)})
 						.y(function(d,i) {return y(d.value);})			
+			
 			var da0 = [];
-				for (var j=0; j<data[0].values.length; j++){
+				for (var j=0; j< data[0].values.length; j++){
 					var linedata = {"type": data[0].key,"month": data[0].values[j].key, "value":+data[0].values[j].value}
+					console.log(data[0].values[j]);
 					da0.push(linedata);
+					months[j] = data[0].values[j].key;
 				}
+			x.domain(months);
+			console.log(months);
 			var da1 = [];
 				for (var j=0; j<data[1].values.length; j++){
 					var linedata = {"type": data[1].key,"month": data[1].values[j].key, "value":+data[1].values[j].value}
@@ -197,21 +205,19 @@ function multiLine(data,name) {
 			  .style("font","8px times")
 			  .call(d3.axisLeft(y))
 				
-			console.log(z(da0[0].type));
 			svg.append("path")
 				.datum(da0)
 				.attr("fill","none")
 				.attr("stroke",z(da0[0].type))
 				.attr("class","line")
-				.attr("stroke-width",1.5)
-				.attr("d",line);
+				.attr("stroke-width",2)
 			
 			svg.append("path")
 				.datum(da1)
 				.attr("fill","none")
 				.attr("stroke",z(da1[0].type))
 				.attr("class","line")
-				.attr("stroke-width",1.5)
+				.attr("stroke-width",2)
 				.attr("d",line);
 			
 			svg.append("path")
@@ -219,7 +225,7 @@ function multiLine(data,name) {
 				.attr("fill","none")
 				.attr("stroke",z(da2[0].type))
 				.attr("class","line")
-				.attr("stroke-width",1.5)
+				.attr("stroke-width",2)
 				.attr("d",line);
 			
 			svg.append("path")
@@ -227,7 +233,7 @@ function multiLine(data,name) {
 				.attr("fill","none")
 				.attr("stroke",z(da3[0].type))
 				.attr("class","line")
-				.attr("stroke-width",1.5)
+				.attr("stroke-width",2)
 				.attr("d",line);
 			
 			svg.append("path")
@@ -235,7 +241,7 @@ function multiLine(data,name) {
 				.attr("fill","none")
 				.attr("stroke",z(da4[0].type))
 				.attr("class","line")
-				.attr("stroke-width",1.5)
+				.attr("stroke-width",2)
 				.attr("d",line);
 			
 			svg.append("path")
@@ -243,7 +249,7 @@ function multiLine(data,name) {
 				.attr("fill","none")
 				.attr("stroke",z(da5[0].type))
 				.attr("class","line")
-				.attr("stroke-width",1.5)
+				.attr("stroke-width",2)
 				.attr("d",line);
 			
 			svg.append("path")
@@ -251,13 +257,48 @@ function multiLine(data,name) {
 				.attr("fill","none")
 				.attr("stroke",z(da6[0].type))
 				.attr("class","line")
-				.attr("stroke-width",1.5)
+				.attr("stroke-width",2)
 				.attr("d",line);			
 			
+			var legendRect = 18;
+			var legendSpacing = 4;
 			
+			legend = svg.selectAll('.legend')                     
+			  .data([da0,da1,da2,da3,da4,da5,da6])                                
+			  .enter()                                                
+			  .append('g')                                            
+			  .attr('class', 'legend')                    
+			  .attr("transform", function(d,i){
+				  var height = legendRect + legendSpacing;
+				  var offset = height * 2 / 2;
+				  var horz = -2 * legendRect;
+				  var vert = i * height -offset;
+				  return "translate("+ (w - 80)+","+ vert +")";
+			  });
+			  
+			 legend.append("rect")
+				.attr("width",20)
+				.attr("height",20)
+				.style("fill", function(d){return z(d[0].type)})
+				
+			legend.append("text")
+				.attr("x", 25)
+				.attr("y", 15)
+				.text(function(d) {return d[0].type})
   }							
 							  
-			 
+function transition(path) {
+        path.transition()
+            .duration(2000)
+            .attrTween("stroke-dasharray", tweenDash);
+    }
+
+function tweenDash() {
+        var l = this.getTotalLength(),
+            i = d3.interpolateString("0," + l, l + "," + l);
+        return function (t) { return i(t); };
+    }
+	
 
 
 
@@ -265,9 +306,10 @@ function auxBar(data,name){
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
 			    w = w - margin.left - margin.right;
-				h = h - margin.top - margin.bottom;
+				h = h - margin.top - margin.bottom -100;
 			var i;
 			count = [];
+			keys = [];
 			for (i=0; i< data.length; i++){
 				count[i] = data[i].values.length;
 			}
@@ -275,8 +317,13 @@ function auxBar(data,name){
 			return d3.ascending(x.index, y.index);
 			})
 			var x = d3.scaleLinear().domain([0, d3.max(count)]).range([0, w-20]),
-			y = d3.scaleLinear().domain([0, 7]).range([0,h]);
 			ordered = data.sort();
+			for(i=0;i<ordered.length;i++){
+				keys[i] = data[i].key;
+			}
+			console.log(keys);
+			y = d3.scaleBand().rangeRound([0,h]);			
+			y.domain(keys);
 			var xAxis = d3.axisBottom(x);
 			var yAxis = d3.axisLeft(y);
 			var canvas = d3.select("#"+name).append("svg")
@@ -301,17 +348,7 @@ function auxBar(data,name){
 			 // Add the y Axis
 			canvas.append("g")
 				.call(d3.axisLeft(y));
-			
-		/*	canvas.selectAll("rect")
-					.data(ordered)
-					.enter()
-					.append("text")
-					.attr("fill","black")
-					.attr("x", -25)
-					.attr("y", function(d,i){return y(i)+20;})
-					.text(function(d) {return d.key;});
-*/	
-			// text label for the y axis
+
 			canvas.append("text")
 				.attr("transform", "rotate(-90)")
 				  .attr("y", 0 - margin.left)
@@ -329,15 +366,15 @@ function auxBar(data,name){
 					.data(data)
 					.enter()
 					.append("rect")
-					.attr("width",function (d){return x(d.values.length);})
+					//.attr("width",function (d){return x(d.values.length);})
 					.attr("height", 30)
-					.attr("y", function(d,i){return y(i);})
+					.attr("y", function(d,i){return y(d.key)+5;})
 					.attr("fill",function(d){if (d.key == "2P") {return "#EC9787";} else {return "steelblue";}})
 					.on("mouseover", function(d,i){
 								 canvas.append("text")
 									 .attr('id','tooltip')
 									 .text(d.values.length)
-									 .attr("y", y(i)+20)
+									 .attr("y", y(d.key)+22)
 									.attr("x", x(d.values.length) + 5)
 									.style("font-size","10px");
 							})
@@ -349,14 +386,50 @@ function auxBar(data,name){
 							gateBar(d.key);
 							currentGraphs.a = "gateBar";
 							currentGraphs.inputA = d.key;
-							});
+							})
+					.transition()
+					.duration(200)
+					.attr("width", function(d, i) {
+						return x(d.values.length);
+					})
+			
+			var legendRect = 18;
+			var legendSpacing = 4;
+			
+			legend = canvas.selectAll('.legend')                     // NEW
+			  .data(["Park Rangers","Other"])                                   // NEW
+			  .enter()                                                // NEW
+			  .append('g')                                            // NEW
+			  .attr('class', 'legend')                    
+			  .attr("transform", function(d,i){
+				  var height = legendRect + legendSpacing;
+				  var offset = height * 2 / 2;
+				  var horz = -2 * legendRect;
+				  var vert = i * height -offset;
+				  return "translate("+ (w - 130)+","+ ((h -100) - vert) +")";
+			  });
+			  
+			 legend.append("rect")
+				.attr("width",20)
+				.attr("height",20)
+				.style("fill",function(d,i){if (d=="Park Rangers")
+									{return "#EC9787";} else {return "steelblue";}})
+				
+			legend.append("text")
+				.attr("x", 25)
+				.attr("y", 15)
+				.text(function(d) {return d})
+				
+		var b = document.getElementById("backA");
+		b.style.display = "none";
 }
+																		
 
 function gateBar(key){
 	var b = document.getElementById("backA");
 	b.style.display = "block";
-	
-	d3.csv("Lekagul Sensor Data.csv").then(function(data, pisellFilter){ // passalo come funzione e returnalo PORCODIO 
+	var margin = {top: 40, right: 10, bottom: 150, left: 80};
+	d3.csv("Lekagul Sensor Data.csv").then(function(data){ 
 			console.log(key);
 			var filter = currentGraphs.filterA;
 			var filtered; 
@@ -402,12 +475,16 @@ function gateBar(key){
 					h = h - margin.top - margin.bottom;
 			var i;		
 			console.log(f);
+			keys = [];
+			for(i=0;i<f.length;i++){
+				keys[i] = f[i].key;
+			}
 			count = [];
 			for (i=0; i< filtered[0].values.length; i++){
 				count[i] = filtered[0].values[i].values.length;
 			}
 			var x = d3.scaleLinear().domain([0, d3.max(count)]).range([0, w-20]),
-			y = d3.scaleLinear().domain([0, count.length]).range([0,h]);
+			y = d3.scaleBand().domain(keys).rangeRound([0,h]);
 			var xAxis = d3.axisBottom(x);
 			var yAxis = d3.axisLeft(y);
 			d3.select("#svga").remove();
@@ -416,7 +493,7 @@ function gateBar(key){
 					.attr("height", h + margin.top + margin.bottom)
 					.attr("id", "svga")
 					.append("g")
-					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+					.attr("transform", "translate(" + margin.left  + "," + margin.top + ")");
 	
 				canvas.append("g")
 				  .attr("transform", "translate(0," + h + ")")
@@ -432,17 +509,8 @@ function gateBar(key){
 			
 			 // Add the y Axis
 				canvas.append("g")
+					.style("font","8px times")
 					.call(d3.axisLeft(y));
-			
-		/*	canvas.selectAll("rect")
-					.data(ordered)
-					.enter()
-					.append("text")
-					.attr("fill","black")
-					.attr("x", -25)
-					.attr("y", function(d,i){return y(i)+20;})
-					.text(function(d) {return d.key;});
-*/
 			
 			// text label for the y axis
 			canvas.append("text")
@@ -457,9 +525,9 @@ function gateBar(key){
 					.data(f)
 					.enter()
 					.append("rect")
-					.attr("width",function (d){return x(d.values.length);})
+					//.attr("width",function (d){return x(d.values.length);})
 					.attr("height", function(){return 5;})
-					.attr("y", function(d,i){return y(i);})
+					.attr("y", function(d,i){return y(d.key);})
 					.attr("fill", function(d){if ((d.key).indexOf("ranger") > -1) {
 												return "#a6cee3";   //ranger azzurro 
 											} else if ((d.key).indexOf("general-gate") > -1) {
@@ -470,8 +538,44 @@ function gateBar(key){
 												return "#33a02c"; //verde camping
 											} else { 
 												return "#fb9a99"; //rosa gates 
-											}
+											}})
+					.transition()
+					.duration(250)
+					.attr("width", function(d, i) {
+						return x(d.values.length);
+					})
+					
+
+			var legendRect = 18;
+			var legendSpacing = 4;
+			
+			legend = canvas.selectAll('.legend')                     // NEW
+			  .data(["Ranger Camps","General gates","Entrances","Camping sites","Gates"])                                   // NEW
+			  .enter()                                                // NEW
+			  .append('g')                                            // NEW
+			  .attr('class', 'legend')                    
+			  .attr("transform", function(d,i){
+				  var height = legendRect + legendSpacing;
+				  var offset = height * 2 / 2;
+				  var horz = -2 * legendRect;
+				  var vert = i * height -offset;
+				  return "translate("+ (w - 130)+","+ ((h -100) - vert) +")";
+			  });
+			  
+			 legend.append("rect")
+				.attr("width",20)
+				.attr("height",20)
+				.style("fill",function(d,i){if (d=="Ranger Camps") {return "#a6cee3";}
+									else if (d == "General gates") {return "#1f78b4";}
+									else if (d == "Camping sites") {return "#33a02c";}
+									else if (d == "Gates") 		   {return "#fb9a99";}
+									else if (d == "Entrances")     {return "#b2df8a";}
 									})
+				
+			legend.append("text")
+				.attr("x", 25)
+				.attr("y", 15)
+				.text(function(d) {return d})
 	});	
 }
 
@@ -511,7 +615,7 @@ function scatter(name){
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
 			    w = w - margin.left - margin.right;
-				h = h - margin.top - margin.bottom;
+				h = h - margin.top - margin.bottom -100;
 
 			
 			var x = d3.scaleLinear().domain([0, ordered.length]).range([0, w-margin.right]),
@@ -597,7 +701,7 @@ function time(name){
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
 			    w = w - margin.left - margin.right;
-				h = h - margin.top - margin.bottom;
+				h = h - margin.top - margin.bottom -100;
 
 			var max = d3.max(ordered1,function(d){return d.values.length;});
 			//console.log(max);
@@ -675,7 +779,7 @@ function enlarge(){
 	var elements = document.querySelectorAll('.container');
 		for(var i=0; i<elements.length; i++){
 			elements[i].style.width =  "100%";
-			elements[i].style.height = "500px";
+			elements[i].style.height = "550px";
 		}
 	d3.select("#svga").remove();
 	d3.select("#svgb").remove();
