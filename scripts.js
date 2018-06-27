@@ -2,23 +2,42 @@ var margin = {top: 40, right: 20, bottom: 50, left: 60};
 
 var currentGraphs = {"a": "bar", "b": "scatter", "c":"time","d":"none",
 					"inputA":"a","inputB":"b","inputC":"c","inputD":"none",
-					"filterA": "none"};
+					"filterA": "none", "filterB":"none"};
 					
 function initChangeA(){
 		var s = document.getElementById("filterA");
 		currentGraphs.filterA = "" + s[s.selectedIndex].value;
 		console.log(currentGraphs.filterA);
-		bar();
-		}
+		a = currentGraphs.a;
+		this[a](currentGraphs.inputA);		}
 
 function back(){
 	x = document.getElementById("backA");
 	x.style.display = "none";
-	bar();
+	bar("a");
 }	
-		
-function bar(){
-		var name = "a";
+
+/*function compare(id1){
+	console.log(id1);
+	var rectB = document.getElementById("b").getBoundingClientRect(),
+		rectA = document.getElementById("a").getBoundingClientRect();
+	//console.log(rect.top, rect.right, rect.bottom, rect.left);
+	d = document.getElementById("comp1");
+	c = document.getElementById("comp2");
+	c.style.display = "block";
+	d.style.display = "block";
+	a = currentGraphs.id1;
+	currentGraphs.inputA = id1;
+	this[a](currentGraphs.inputA);
+	hide1 = document.getElementById(id1);
+	hide1.style.display = "none";
+	
+	//	s.style.left = "100px"; //spostali in giro così quando fai i compare
+
+	}	
+*/	
+function bar(name){
+		//console.log(name);
 		var selection = document.getElementById("filterA");
 		var filter;
 		if(currentGraphs.filterA == "none"){
@@ -59,7 +78,6 @@ function bar(){
 								.entries(base)
 								.sort(function(a, b){ return d3.descending(a.values, b.values);});
 							auxBar(ordered,name);
-						//AGGIUGNI I CURRENTGRAPHS
 				} else if (filter == "2015"){
 						currentGraphs.a = "bar";
 						currentGraphs.inputA = name;
@@ -93,7 +111,7 @@ function bar(){
 								.rollup(function (v) {return v.length;}) //va bene così
 								.entries(base)
 							//	.sort(function(a, b){ return d3.descending(a.values, b.values);});
-						console.log(ordered);
+						//console.log(ordered);
 						multiLine(ordered,name);
 						//metti parallel coordinates
 					})		
@@ -108,10 +126,11 @@ function multiLine(data,name) {
 			    w = w - margin.left - margin.right;
 				h = h - margin.top - margin.bottom- 100;
 			
-			var x = d3.scaleBand().rangeRound([0, w]),
+			var //x = d3.scaleTime().range([0,w]),
+		    x = d3.scalePoint().range([0, w]),
 			y = d3.scaleLinear().domain([19000,0]).range([0,h]);
 			
-			var xAxis = d3.axisBottom(x);
+			var xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%b"));
 			var yAxis = d3.axisLeft(y);			
 			
 			
@@ -131,7 +150,7 @@ function multiLine(data,name) {
 				}
 			}
 			
-			console.log(cols);		
+			//console.log(cols);		
 			var line = d3.line()
 						.x(function(d,i){return x(d.month)})
 						.y(function(d,i) {return y(d.value);})			
@@ -144,7 +163,6 @@ function multiLine(data,name) {
 					months[j] = data[0].values[j].key;
 				}
 			x.domain(months);
-			console.log(months);
 			var da1 = [];
 				for (var j=0; j<data[1].values.length; j++){
 					var linedata = {"type": data[1].key,"month": data[1].values[j].key, "value":+data[1].values[j].value}
@@ -286,22 +304,7 @@ function multiLine(data,name) {
 				.attr("y", 15)
 				.text(function(d) {return d[0].type})
   }							
-							  
-function transition(path) {
-        path.transition()
-            .duration(2000)
-            .attrTween("stroke-dasharray", tweenDash);
-    }
-
-function tweenDash() {
-        var l = this.getTotalLength(),
-            i = d3.interpolateString("0," + l, l + "," + l);
-        return function (t) { return i(t); };
-    }
 	
-
-
-
 function auxBar(data,name){
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
@@ -321,7 +324,7 @@ function auxBar(data,name){
 			for(i=0;i<ordered.length;i++){
 				keys[i] = data[i].key;
 			}
-			console.log(keys);
+			//console.log(keys);
 			y = d3.scaleBand().rangeRound([0,h]);			
 			y.domain(keys);
 			var xAxis = d3.axisBottom(x);
@@ -430,7 +433,7 @@ function gateBar(key){
 	b.style.display = "block";
 	var margin = {top: 40, right: 10, bottom: 150, left: 80};
 	d3.csv("Lekagul Sensor Data.csv").then(function(data){ 
-			console.log(key);
+			//console.log(key);
 			var filter = currentGraphs.filterA;
 			var filtered; 
 			if(filter == "2015"){
@@ -474,7 +477,7 @@ function gateBar(key){
 					w = w - margin.left - margin.right;
 					h = h - margin.top - margin.bottom;
 			var i;		
-			console.log(f);
+			//console.log(f);
 			keys = [];
 			for(i=0;i<f.length;i++){
 				keys[i] = f[i].key;
@@ -483,8 +486,9 @@ function gateBar(key){
 			for (i=0; i< filtered[0].values.length; i++){
 				count[i] = filtered[0].values[i].values.length;
 			}
+
 			var x = d3.scaleLinear().domain([0, d3.max(count)]).range([0, w-20]),
-			y = d3.scaleBand().domain(keys).rangeRound([0,h]);
+			y = d3.scalePoint().domain(keys).rangeRound([0,h]);
 			var xAxis = d3.axisBottom(x);
 			var yAxis = d3.axisLeft(y);
 			d3.select("#svga").remove();
@@ -639,7 +643,7 @@ function scatter(name){
 			svg.append("text")             
 				  .attr("transform",
 						"translate(" + (w/2) + " ," + 
-									   (h + margin.top + 20) + ")")
+									   (h + margin.top) + ")")
 				  .style("text-anchor", "middle")
 				  .text("Vehicle");
 			
@@ -655,7 +659,7 @@ function scatter(name){
 				  .attr("dy", "1em")
 				  .style("text-anchor", "middle")
 				  .text("Number of readings");      
-				console.log(ordered);
+				//console.log(ordered);
 			//manca l'append dei dati 
 			 svg.selectAll("circle")
 				.data(ordered)
@@ -691,12 +695,12 @@ function time(name){
 				var time = parseTime(d.key);
 				d.key = format(time);
 				})
-			console.log(ordered);
+			//console.log(ordered);
 			
 			var ordered1 = d3.nest()
 						.key(function(d){return d['key'];})
 						.entries(ordered);
-			console.log(ordered1);
+			//console.log(ordered1);
 			
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
@@ -743,7 +747,7 @@ function time(name){
 			svg.append("text")             
 				  .attr("transform",
 						"translate(" + (w/2) + " ," + 
-									   (h + margin.top + 20) + ")")
+									   (h + margin.top) + ")")
 				  .style("text-anchor", "middle")
 				  .text("Day");
 			
@@ -770,8 +774,241 @@ function time(name){
 	});
 };
 
+function test(name,filter){
+	d3.csv("Lekagul Sensor Data.csv").then(function(data){
+			var base = data;
+				var parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
+				var format = d3.timeFormat("%d-%m %H:%M:%S");
+				base.forEach(function(d,i) {   
+				var time = parseTime(d.Timestamp);
+				d.Timestamp = format(time);})	
+				var path = []
+			var ordered = d3.nest()
+					.key(function(d){return d['car-id'];})
+					.rollup(function(v){
+										var path=[];
+										for(i = 0; i<v.length; i++) {
+												path.push(v[i]["gate-name"]);
+										}
+										return path;
+					})										
+					.entries(base)
+				base = base.filter(function(d) {return d['car-type'] == "2P";})
+				console.log(base);
+				console.log(ordered);
+	})
+}
 
-//Dimension functions
+
+function scatteroni(name,filter){
+	currentGraphs.b = "scatteroni";
+	currentGraphs.inputB = name;
+	currentGraphs.filterB = filter;
+	d3.csv("Lekagul Sensor Data.csv").then(function(data){
+			var base = data;
+			var everyone = d3.nest()
+					.key(function(d){return d['car-id'];})
+					.entries(data);
+					
+			var filtered = base.filter(function(d) {if(d['car-type'] == "2P"){return d}})
+				var rangers = d3.nest()
+						.key(function(d){return d['car-id'];})
+						.entries(filtered)
+			
+			var parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
+			var format = d3.timeFormat("%d-%m");
+			base.forEach(function(d,i) {   
+				var time = parseTime(d.Timestamp);
+				d.Timestamp = format(time);})
+			var arr = [];
+			var sameDayVisitors = d3.nest()
+					.key(function(d){return d['car-id'];})
+					.key(function(d){return d['Timestamp'];})
+					.rollup(function(v){ arr.push(v.length)})
+					.entries(base)
+					.filter(function (d){if (d.values.length == 1) {return d}});
+			
+			console.log(arr);
+			
+			//var margin = {top: 20, right: 20, bottom: 50, left: 50};
+			var h = document.getElementById(name).clientHeight;
+			var w = document.getElementById(name).offsetWidth;
+			    w = w - margin.left - margin.right;
+				h = h - margin.top - margin.bottom -100;
+			
+			var ordered;
+			if(filter == "General"){
+				ordered = everyone;		
+			} else if (filter == "Rangers") {
+				ordered = rangers;
+			} else if (filter == "Same Day") {
+				ordered = sameDayVisitors;
+			}
+			
+			var max; 
+			
+			console.log(filter);
+			if(filter == "Same Day") {
+			max = d3.max(ordered,function(d){return d.values[0].value;})+5;
+			} else {
+				max = d3.max(ordered,function(d){return d.values.length;})+5;
+			}
+		//	console.log(max);
+			
+			var x = d3.scaleLinear().domain([0, ordered.length]).range([0, w-margin.right]),
+			y = d3.scaleLinear().domain([0, max]).range([h,0]);
+
+						
+			var filters = ["General", "Rangers", "Same Day"];
+
+		var s = d3.select('#'+name)
+					  .append('select')
+						.attr("id","sel")
+						.attr('class','select')
+						.on('change',onchange)
+
+		var options = s
+			  .selectAll('option')
+				.data(filters)
+				.enter()
+				.append('option')
+					.text(function (d) { return d});
+
+		function onchange() {
+			s = document.getElementById("sel")
+			selectValue= ""+s[s.selectedIndex].value;
+				if(selectValue == "General") {
+						data = everyone;
+						console.log(selectValue,data.length)
+						currentGraphs.filterB = selectValue;
+						max = d3.max(data,function(d){return d.values.length;})+5;
+						x.domain([0,data.length]);
+					y.domain([0,max]);
+					} else if(selectValue == "Rangers") {
+						data = rangers;
+						console.log(selectValue,data.length)
+						console.log("DIAAAAAAAAAAAAAAAA")
+						currentGraphs.filterB = selectValue;
+						max = d3.max(rangers,function(d){return d.values.length;})+5;
+						x.domain([0,data.length]);
+						y.domain([0,max]);
+					} else if(selectValue == "Same Day"){
+						data = arr;
+						console.log(selectValue,data.length)
+						currentGraphs.filterB = selectValue;
+						max = d3.max(arr)+5;
+						console.log("DIOBOIAAAAAAAAAA")
+						x = d3.scaleLinear().range([0, w-margin.right])
+						y = d3.scaleLinear().range([h,0]);
+						x.domain([0,data.length]);
+						y.domain([0,max]);
+					}
+					
+						console.log(data);
+					console.log(max);
+					
+					
+					svg.selectAll("circle")
+						.remove()
+						
+					if(selectValue == "Same Day"){		
+						console.log("DIOBOIAAAAAAAAAA");
+						 svg.selectAll("circle")
+							.data(data)
+							.enter()
+							.append("circle")
+							.attr("cx", function (d,i){return x(i);})
+							.attr("cy", function (d) {return y(d);} )
+							.attr("r", 2)
+							.attr("fill","steelblue");
+							svg.select(".x")
+						.transition()
+						.duration(1000)
+						.call(d3.axisBottom(x));
+					
+					svg.select(".y")
+						.transition()
+						.duration(1000)
+						.call(d3.axisLeft(y));
+					} else {
+						 svg.selectAll("circle")
+							.data(data)
+							.enter()
+							.append("circle")
+							.attr("cx", function (d,i){return x(i);})
+							.attr("cy", function (d,i) {return y(d.values.length);} )
+							.attr("r", 2)
+							.attr("fill","steelblue");
+					
+					svg.select(".x")
+						.transition()
+						.duration(1000)
+						.call(d3.axisBottom(x));
+					
+					svg.select(".y")
+						.transition()
+						.duration(1000)
+						.call(d3.axisLeft(y));
+						}	
+					}
+			
+			
+			var svg = d3.select("#"+name).append("svg")
+					.attr("id", "svg"+name)
+					.attr("width", w + margin.left + margin.right)
+					.attr("height", h + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          
+			svg.append("g")
+				  .attr("transform", "translate(0," + h + ")")
+				  .attr("class","x") 
+				  .call(d3.axisBottom(x));
+
+			  // text label for the x axis
+			svg.append("text")             
+				  .attr("transform",
+						"translate(" + (w/2) + " ," + 
+									   (h + margin.top) + ")")
+				  .style("text-anchor", "middle")
+				  .text("Vehicle SCATTERONI");
+			
+			 // Add the y Axis
+			svg.append("g")
+				.attr("class","y")
+				.call(d3.axisLeft(y));
+	
+			// text label for the y axis
+			svg.append("text")
+				.attr("transform", "rotate(-90)")
+				  .attr("y", 0 - margin.left)
+				  .attr("x",0 - (h / 2))
+				  .attr("dy", "1em")
+				  .style("text-anchor", "middle")
+				  .text("Number of readings");      
+			
+			if(filter == "Same Day"){		
+				console.log(filter);
+				 svg.selectAll("circle")
+					.data(arr)
+					.enter()
+					.append("circle")
+					.attr("cx", function (d,i){return x(i);})
+					.attr("cy", function (d,i) {return y(d);} )
+					.attr("r", 2)
+					.attr("fill","steelblue");
+			} else {
+				 svg.selectAll("circle")
+					.data(ordered)
+					.enter()
+					.append("circle")
+					.attr("cx", function (d,i){return x(i);})
+					.attr("cy", function (d,i) {return y(d.values.length);} )
+					.attr("r", 2)
+					.attr("fill","steelblue");
+				}
+	})};
+
 
 function enlarge(){
 	var w = parseInt(d3.select(".container").style("width"),10);
@@ -783,11 +1020,12 @@ function enlarge(){
 		}
 	d3.select("#svga").remove();
 	d3.select("#svgb").remove();
+	d3.select("#sel").remove();
 	d3.select("#svgc").remove();
 	a = currentGraphs.a;
 	this[a](currentGraphs.inputA);
 	b = currentGraphs.b;
-	this[b](currentGraphs.inputB);
+	this[b](currentGraphs.inputB,currentGraphs.filterB);
 	c = currentGraphs.c;
 	this[c](currentGraphs.inputC);
 	}
@@ -801,11 +1039,12 @@ function reduce(){
 		}
 	d3.select("#svga").remove();
 	d3.select("#svgb").remove();
+	d3.select("#sel").remove();
 	d3.select("#svgc").remove();
 	a = currentGraphs.a;
 	this[a](currentGraphs.inputA);
 	b = currentGraphs.b;
-	this[b](currentGraphs.inputB);
+	this[b](currentGraphs.inputB,currentGraphs.filterB);
 	c = currentGraphs.c;
 	this[c](currentGraphs.inputC);
 }	
