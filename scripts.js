@@ -380,11 +380,16 @@ function auxBar(data,name){
 									 .text(d.values.length)
 									 .attr("y", y(d.key)+22)
 									.attr("x", x(d.values.length) + 5)
-									.style("font-size","10px");
+									.style("font-size","10px")
+								d3.select(this)
+									.attr("stroke","black")
+									.attr("stroke-width",2);
 							})
 					.on("mouseout", function(d,i){
 									canvas.selectAll("#tooltip")
 										.remove();
+									d3.select(this)
+									.attr("stroke-width",0);	
 					})
 					.on("click", function(d){
 							gateBar(d.key);
@@ -736,277 +741,77 @@ function scatter(name,filter){
 	currentGraphs.filterB = filter;
 	d3.csv("Lekagul Sensor Data.csv").then(function(data){
 			var base = data;
-			var everyone = d3.nest()
-					.key(function(d){return d['car-id'];})
-					.entries(data);
-					
-			var filtered = base.filter(function(d) {if(d['car-type'] == "2P"){return d}})
-				var rangers = d3.nest()
-						.key(function(d){return d['car-id'];})
-						.entries(filtered)
-			
 			var parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
-			var format = d3.timeFormat("%d-%m");
+			var format = d3.timeFormat("%d-%m-%Y");
 			base.forEach(function(d,i) {   
 				var time = parseTime(d.Timestamp);
 				d.Timestamp = format(time);})
 			
-			var sameDayVisitors = d3.nest()
+			var everyone = d3.nest()
 					.key(function(d){return d['car-id'];})
-					.key(function(d){return d['Timestamp'];})
-					.entries(base)
-					.filter(function (d){if (d.values.length == 1) {return d}});
+					.key(function(d){return d['Timestamp']})
+					.entries(data);
 			
-			var arr = [];			
-			for(i=0;i<sameDayVisitors.length;i++){
+			var every = [];
+			for(i=0;i<everyone.length;i++){
 				var sum = 0;
 				var car;
-				for(j=0;j<sameDayVisitors[i].values.length;j++){
-					sum = sum + sameDayVisitors[i].values[j].values.length 
-					car = sameDayVisitors[i].values[j].values[0]['car-type']
+				var days = [];
+				for(j=0;j<everyone[i].values.length;j++){
+					sum = sum + everyone[i].values[j].values.length 
+					car = everyone[i].values[j].values[0]['car-type']
+					d = everyone[i].values[j].key;
+					days.push(d);
 				}
-				var obj = {'sum':sum,"car":car};
-				arr.push(obj);
-			}			
-			
-			console.log(arr);
-			
-			var diffDayVisitors = d3.nest()
-									.key(function(d){return d['car-id']})
-									.key(function(d){return d['Timestamp'];})
-								//	.rollup(function(v){arr1.push(v.length)})
-									.entries(base)
-									.filter(function (d){if (d.values.length > 1) {return d}});
-			
-			var arr1 = [];			
-			for(i=0;i<diffDayVisitors.length;i++){
-				var sum = 0;
-				for(j=0;j<diffDayVisitors[i].values.length;j++){
-					sum = sum + diffDayVisitors[i].values[j].values.length 
-					car = diffDayVisitors[i].values[j].values[0]['car-type']
-				}
-				var obj = {'sum':sum,"car":car};
-				arr1.push(obj);
-			}			
-			
-			var moreThan3 = d3.nest()
-									.key(function(d){return d['car-id']})
-									.key(function(d){return d['Timestamp'];})
-								//	.rollup(function(v){arr1.push(v.length)})
-									.entries(base)
-									.filter(function (d){if (d.values.length > 2) {return d}});
-			
-			var arr2 = [];			
-			for(i=0;i<moreThan3.length;i++){
-				var sum = 0;
-				for(j=0;j<moreThan3[i].values.length;j++){
-					sum = sum + moreThan3[i].values[j].values.length 
-					car = moreThan3[i].values[j].values[0]['car-type']
-				}
-				var obj = {'sum':sum,"car":car};
-				arr2.push(obj);
-			}			
-			
-			console.log(arr2);
-					
+				var obj = {'sum':sum,"car":car,"days":days};
+				every.push(obj);
+			}		
+				console.log(every)
+				
+			var rangers = every.filter(function(d){if(d.car == "2P"){return d}})
+				console.log(rangers);
+			var sameDayVisitors = every.filter(function(d){if(d.days.length == 1) {return d}});
+			var diffDayVisitors = every.filter(function(d){if (d.days.length > 1) {return d}});
+			console.log(diffDayVisitors);
+			var moreThan3 = every.filter(function(d){if(d.days.length > 2){return d}})
+			var ordered;
+			if(filter == "General"){
+				ordered = every;		
+			} else if (filter == "Rangers") {
+				ordered = rangers;
+			} else if (filter == "Same Day") {
+				ordered = sameDayVisitors;
+			} else if (filter == "Different Days") {
+				ordered = diffDayVisitors;
+			} else if (filter == "3 or more Days") {
+				ordered = moreThan3;
+			}
 			var h = document.getElementById(name).clientHeight;
 			var w = document.getElementById(name).offsetWidth;
 			    w = w - margin.left - margin.right;
 				h = h - margin.top - margin.bottom -100;
 			
-			var ordered;
-			if(filter == "General"){
-				ordered = everyone;		
-			} else if (filter == "Rangers") {
-				ordered = rangers;
-			} else if (filter == "Same Day") {
-				ordered = arr;
-			} else if (filter == "Different Days") {
-				ordered = arr1;
-			} else if (filter == "3 or more Days") {
-				ordered = arr2;
-			}
-			
-			var max; 
-			
-			console.log(filter);
-			if(filter == "Same Day" || filter == "Different Days" || filter == "3 or more Days") { //hanno struttura diversa 
-			//max = d3.max(ordered,function(d){return d.values[0].value;})+5;
-			max = d3.max(arr,function(d){return d.sum})+5;
-			} else {
-				max = d3.max(ordered,function(d){return d.values.length;})+5;
-			}
-			
-			var x = d3.scaleLinear().domain([0, ordered.length]).range([0, w-margin.right]),
-			y = d3.scaleLinear().domain([0, max]).range([h,0]);
-
-						
 			var filters = ["General", "Rangers", "Same Day","Different Days","3 or more Days"];
 
-		var s = d3.select('#'+name)
-					  .append('select')
-						.attr("id","sel")
-						.attr('class','select')
-						.on('change',onchange)
+			var s = d3.select('#'+name)
+						  .append('select')
+							.attr("id","sel")
+							.attr('class','select')
+							.on('change',onchange)
 
-		var options = s
-			  .selectAll('option')
-				.data(filters)
-				.enter()
-				.append('option')
-					.text(function (d) { return d});
-
-		function onchange() {
-			s = document.getElementById("sel")
-			selectValue= ""+s[s.selectedIndex].value;
-				if(selectValue == "General") {
-						data = everyone;
-						currentGraphs.filterB = selectValue;
-						max = d3.max(data,function(d){return d.values.length;})+5;
-						x.domain([0,data.length]);
-						y.domain([0,max]);
-					} else if(selectValue == "Rangers") {
-						data = rangers;
-						currentGraphs.filterB = selectValue;
-						max = d3.max(rangers,function(d){return d.values.length;})+5;
-						x.domain([0,data.length]);
-						y.domain([0,max]);
-					} else if(selectValue == "Same Day"){
-						data = arr;
-						currentGraphs.filterB = selectValue;
-						max = d3.max(arr,function(d){return d.sum})+5;
-						x = d3.scaleLinear().range([0, w-margin.right])
-						y = d3.scaleLinear().range([h,0]);
-						x.domain([0,data.length]);
-						y.domain([0,max]);
-					} else if(selectValue == "Different Days"){
-						data = arr1;
-						currentGraphs.filterB = selectValue;
-						max = d3.max(arr1,function(d){return d.sum})+5;
-						x = d3.scaleLinear().range([0, w-margin.right])
-						y = d3.scaleLinear().range([h,0]);
-						x.domain([0,data.length]);
-						y.domain([0,max]);
-					} else if (selectValue == "3 or more Days"){
-						data = arr2;
-						currentGraphs.filterB = selectValue;
-						max = d3.max(arr2,function(d){return d.sum})+5;
-						x = d3.scaleLinear().range([0, w-margin.right])
-						y = d3.scaleLinear().range([h,0]);
-						x.domain([0,data.length]);
-						y.domain([0,max]);
-					} 
-					
-					svg.selectAll("circle")
-						.remove()
-					
-					console.log("data",data[0].sum);
-					
-					if(selectValue == "Same Day" || selectValue == "Different Days" || selectValue == "3 or more Days"){		
-						 svg.selectAll("circle")
-							.data(data)
-							.enter()
-							.append("circle")
-							.attr("cx", function (d,i){return x(i);})
-							.attr("cy", function (d) {return y(d.sum);} )
-							.attr("r", 2)
-							.attr("fill",function changeColor(d) {if(d.car == "2P"){return "#EC9787"} else {return "steelblue";}})
-								.on("mouseover", function(d){ d3.select(this).style("r",10)})
-								.on("mouseout", function(d) { d3.select(this).style("r",2)})
-					
-					svg.select(".x")
-						.transition()
-						.duration(1000)
-						.call(d3.axisBottom(x));
-					
-					svg.select(".y")
-						.transition()
-						.duration(1000)
-						.call(d3.axisLeft(y));
-					} else {
-						 svg.selectAll("circle")
-							.data(data)
-							.enter()
-							.append("circle")
-							.attr("cx", function (d,i){return x(i);})
-							.attr("cy", function (d,i) {return y(d.values.length);} )
-							.attr("r", 2)
-							.attr("fill",function(d){if (d.values[0]["car-type"] == "2P") {return "#EC9787"} else {return "steelblue"}})
-								.on("mouseover", function(d){ d3.select(this).style("r",10)})
-								.on("mouseout", function(d) { d3.select(this).style("r",2)})
-							
-					svg.select(".x")
-						.transition()
-						.duration(1000)
-						.call(d3.axisBottom(x));
-					
-					svg.select(".y")
-						.transition()
-						.duration(1000)
-						.call(d3.axisLeft(y));
-						}	
-					}
-			
-			
+			var options = s
+				  .selectAll('option')
+					.data(filters)
+					.enter()
+					.append('option')
+						.text(function (d) { return d});
 			var svg = d3.select("#"+name).append("svg")
 					.attr("id", "svg"+name)
 					.attr("width", w + margin.left + margin.right)
 					.attr("height", h + margin.top + margin.bottom)
 					.append("g")
 					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-          
-			svg.append("g")
-				  .attr("transform", "translate(0," + h + ")")
-				  .attr("class","x") 
-				  .call(d3.axisBottom(x));
-
-			  // text label for the x axis
-			svg.append("text")             
-				  .attr("transform",
-						"translate(" + (w/2) + " ," + 
-									   (h + margin.top) + ")")
-				  .style("text-anchor", "middle")
-				  .text("Vehicle SCATTERONI");
-			
-			 // Add the y Axis
-			svg.append("g")
-				.attr("class","y")
-				.call(d3.axisLeft(y));
 	
-			// text label for the y axis
-			svg.append("text")
-				.attr("transform", "rotate(-90)")
-				  .attr("y", 0 - margin.left)
-				  .attr("x",0 - (h / 2))
-				  .attr("dy", "1em")
-				  .style("text-anchor", "middle")
-				  .text("Number of readings");      
-			
-			if(filter == "Same Day" || filter == "Different Days" || filter == "3 or more Days"){		
-				console.log(filter);
-				 svg.selectAll("circle")
-					.data(arr)
-					.enter()
-					.append("circle")
-					.attr("cx", function (d,i){return x(i);})
-					.attr("cy", function (d,i) {return y(d.sum);} )
-					.attr("r", 2)
-					.attr("fill",function(d){if (d.car == "2P") {return "#EC9787"} else {return "steelblue"}})
-						.on("mouseover", function(d){ d3.select(this).style("r",10)})
-						.on("mouseout", function(d) { d3.select(this).style("r",2)})
-			} else {
-				 svg.selectAll("circle")
-					.data(ordered)
-					.enter()
-					.append("circle")
-					.attr("cx", function (d,i){return x(i);})
-					.attr("cy", function (d,i) {return y(d.values.length);} )
-					.attr("r", 2)
-					.attr("fill",function(d){if (d.values[0]["car-type"] == "2P") {return "#EC9787"} else {return "steelblue"}})
-						.on("mouseover", function(d){ d3.select(this).style("r",10)})
-						.on("mouseout", function(d) { d3.select(this).style("r",2)})
-						//AGGIUNGI QUALCOSA PER DISTINGUERE E TOOLTIP CON INFO SULLA MACCHINA, magari visualizzare il path sarebbe fico?
-				}
 			var legendRect = 18;
 			var legendSpacing = 4;
 			
@@ -1033,8 +838,168 @@ function scatter(name,filter){
 				.attr("x", 25)
 				.attr("y", 15)
 				.text(function(d) {return d})
-				 
-	})};	
+			//draw 		
+			var max = d3.max(ordered,function(d){return d.sum})+5;
+			var x = d3.scaleLinear().domain([0, ordered.length]).range([0, w-margin.right]),
+			y = d3.scaleLinear().domain([0, max]).range([h,0]);
+          
+			svg.append("g")
+				  .attr("transform", "translate(0," + h + ")")
+				  .attr("class","x") 
+				  .call(d3.axisBottom(x));
+
+			  // text label for the x axis
+			svg.append("text")             
+				  .attr("transform",
+						"translate(" + (w/2) + " ," + 
+									   (h + margin.top) + ")")
+				  .style("text-anchor", "middle")
+				  .text("Vehicle SCATTERONI");
+			
+			var tooldiv = d3.select("#"+name).append("div")
+							.attr("class","tooltip")
+							.style("opacity",0)
+			
+			 // Add the y Axis
+			svg.append("g")
+				.attr("class","y")
+				.call(d3.axisLeft(y));
+	
+			// text label for the y axis
+			svg.append("text")
+				.attr("transform", "rotate(-90)")
+				  .attr("y", 0 - margin.left)
+				  .attr("x",0 - (h / 2))
+				  .attr("dy", "1em")
+				  .style("text-anchor", "middle")
+				  .text("Number of readings"); 
+			
+			 svg.selectAll("circle")
+					.data(ordered)
+					.enter()
+					.append("circle")
+					.attr("cx", function (d,i){return x(i);})
+					.attr("cy", function (d,i) {return y(d.sum);} )
+					.attr("r", 2)
+					.attr("fill",function(d){if (d.car == "2P") {return "#EC9787"} else {return "steelblue"}})
+						.on("mouseover", function(d){ d3.select(this)
+															.transition()
+															.duration(500)
+															.style("r",12)
+															.attr("stroke","black")
+															.attr("stroke-width",6)
+													    tooldiv.transition().duration(200).style("opacity",.9);
+														if(d.days.length > 5){
+															tooldiv.style("width","400px")
+														} else {
+															tooldiv.style("width","80px")
+														}
+												
+														tooldiv.selectAll("text")
+														               .data(d.days)
+																	   .enter()
+																	   .append("span")
+																	   .text(function(d) {return d+", "})
+	
+														tooldiv.style("left", (d3.event.pageX + 15) + "px")
+																.style("top", (d3.event.pageY - 40) +"px")
+														})
+						.on("mouseout", function(d) { d3.select(this).transition().duration(500).style("r",2).attr("stroke-width",0)
+														tooldiv.transition().duration(500).style("opacity",0).style("width","80px")
+														tooldiv.selectAll("span").remove()})
+						//AGGIUNGI QUALCOSA PER DISTINGUERE E TOOLTIP CON INFO SULLA MACCHINA, magari visualizzare il path sarebbe fico?
+						//mostra tipo i giorni in cui ha girato con le ore o i posti da cui è passato? 
+						
+		function onchange() {
+			s = document.getElementById("sel")
+			selectValue= ""+s[s.selectedIndex].value;
+				if(selectValue == "General") {
+						data = every;
+						currentGraphs.filterB = selectValue;
+						max = d3.max(every,function(d){return d.sum;})+5;
+						x.domain([0,data.length]);
+						y.domain([0,max]);
+					} else if(selectValue == "Rangers") {
+						data = rangers;
+						currentGraphs.filterB = selectValue;
+						max = d3.max(rangers,function(d){return d.sum;})+5;
+						x.domain([0,data.length]);
+						y.domain([0,max]);
+					} else if(selectValue == "Same Day"){
+						data = sameDayVisitors;
+						currentGraphs.filterB = selectValue;
+						max = d3.max(sameDayVisitors,function(d){return d.sum})+5;
+						x = d3.scaleLinear().range([0, w-margin.right])
+						y = d3.scaleLinear().range([h,0]);
+						x.domain([0,data.length]);
+						y.domain([0,max]);
+					} else if(selectValue == "Different Days"){
+						data = diffDayVisitors;
+						currentGraphs.filterB = selectValue;
+						max = d3.max(diffDayVisitors,function(d){return d.sum})+5;
+						x = d3.scaleLinear().range([0, w-margin.right])
+						y = d3.scaleLinear().range([h,0]);
+						x.domain([0,data.length]);
+						y.domain([0,max]);
+					} else if (selectValue == "3 or more Days"){
+						data = moreThan3;
+						currentGraphs.filterB = selectValue;
+						max = d3.max(moreThan3,function(d){return d.sum})+5;
+						x = d3.scaleLinear().range([0, w-margin.right])
+						y = d3.scaleLinear().range([h,0]);
+						x.domain([0,data.length-1]);
+						y.domain([0,max]);
+					} 
+					svg.selectAll("circle")
+						.remove()
+					 svg.selectAll("circle")
+						.data(data)
+						.enter()
+						.append("circle")
+						.attr("cx", function (d,i){return x(i);})
+						.attr("cy", function (d,i) {return y(d.sum);} )
+						.attr("r", 2)
+						.attr("fill",function(d){if (d.car == "2P") {return "#EC9787"} else {return "steelblue"}})
+							.on("mouseover", function(d){ d3.select(this)
+															.transition()
+															.duration(500)
+															.style("r",12)
+															.attr("stroke","black")
+															.attr("stroke-width",6)
+													    tooldiv.transition().duration(200).style("opacity",.9);
+														if(d.days.length > 5){
+															tooldiv.style("width","400px")
+														} else {
+															tooldiv.style("width","80px")
+														}
+														
+														tooldiv.selectAll("text")
+														               .data(d.days)
+																	   .enter()
+																	   .append("span")
+																	   .text(function(d) {return d+", "})
+																	   
+														tooldiv.style("left", (d3.event.pageX + 15) + "px")
+																.style("top", (d3.event.pageY - 40) +"px")
+														})
+						.on("mouseout", function(d) { d3.select(this).transition().duration(500).style("r",2).attr("stroke-width",0)
+														tooldiv.transition().duration(500).style("opacity",0).style("width","80px")
+														tooldiv.selectAll("span").remove()})			
+							
+					svg.select(".x")
+						.transition()
+						.duration(1000)
+						.call(d3.axisBottom(x));
+					
+					svg.select(".y")
+						.transition()
+						.duration(1000)
+						.call(d3.axisLeft(y));
+		}									
+			
+	})}
+		
+/*
 	
 function bar1(name,filter){
 		currentGraphs.a = "bar1";
@@ -1117,9 +1082,8 @@ function bar1(name,filter){
 			console.log("month",monthData);
 	
 			})
-*/})
-}
-		
+
+		*/
 
 function enlarge(){
 	var w = parseInt(d3.select(".container").style("width"),10);
