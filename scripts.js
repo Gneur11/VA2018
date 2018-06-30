@@ -709,30 +709,7 @@ function time(name){
 	});
 };
 
-function test(name,filter){
-	d3.csv("Lekagul Sensor Data.csv").then(function(data){
-			var base = data;
-				var parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
-				var format = d3.timeFormat("%d-%m %H:%M:%S");
-				base.forEach(function(d,i) {   
-				var time = parseTime(d.Timestamp);
-				d.Timestamp = format(time);})	
-				var path = []
-			var ordered = d3.nest()
-					.key(function(d){return d['car-id'];})
-					.rollup(function(v){
-										var path=[];
-										for(i = 0; i<v.length; i++) {
-												path.push(v[i]["gate-name"]);
-										}
-										return path;
-					})										
-					.entries(base)
-				base = base.filter(function(d) {return d['car-type'] == "2P";})
-				console.log(base);
-				console.log(ordered);
-	})
-}
+
 
 
 function scatter(name,filter){
@@ -765,14 +742,10 @@ function scatter(name,filter){
 				}
 				var obj = {'sum':sum,"car":car,"days":days};
 				every.push(obj);
-			}		
-				console.log(every)
-				
+			}						
 			var rangers = every.filter(function(d){if(d.car == "2P"){return d}})
-				console.log(rangers);
 			var sameDayVisitors = every.filter(function(d){if(d.days.length == 1) {return d}});
 			var diffDayVisitors = every.filter(function(d){if (d.days.length > 1) {return d}});
-			console.log(diffDayVisitors);
 			var moreThan3 = every.filter(function(d){if(d.days.length > 2){return d}})
 			var ordered;
 			if(filter == "General"){
@@ -854,7 +827,7 @@ function scatter(name,filter){
 						"translate(" + (w/2) + " ," + 
 									   (h + margin.top) + ")")
 				  .style("text-anchor", "middle")
-				  .text("Vehicle SCATTERONI");
+				  .text("Vehicle");
 			
 			var tooldiv = d3.select("#"+name).append("div")
 							.attr("class","tooltip")
@@ -907,8 +880,7 @@ function scatter(name,filter){
 						.on("mouseout", function(d) { d3.select(this).transition().duration(500).style("r",2).attr("stroke-width",0)
 														tooldiv.transition().duration(500).style("opacity",0).style("width","80px")
 														tooldiv.selectAll("span").remove()})
-						//AGGIUNGI QUALCOSA PER DISTINGUERE E TOOLTIP CON INFO SULLA MACCHINA, magari visualizzare il path sarebbe fico?
-						//mostra tipo i giorni in cui ha girato con le ore o i posti da cui è passato? 
+				
 						
 		function onchange() {
 			s = document.getElementById("sel")
@@ -1124,3 +1096,103 @@ function reduce(){
 	this[c](currentGraphs.inputC);
 }	
 
+function force(name,filter) {   // il force graph sarà un "dettaglio" venuto fuori dalla timeline, come fare? filtro con select (per ogni mese e generale e gli passi i dati per quel periodo?
+	// calcolare i dati una volta e salvarli su qualche file. salvarli tipo "entrance2-> ranger1, 32492039 volte"? 
+	var margin = {top: 40, right: 20, bottom: 50, left: 10};
+
+	d3.csv("Lekagul Sensor Data.csv").then(function(data){
+			var base = data;
+			var parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
+			var format = d3.timeFormat("%Y-%m-%d");
+			base.forEach(function(d,i) {   
+			time = parseTime (d.Timestamp)
+			d.Timestamp = format(time)}
+			)
+			var h = document.getElementById(name).clientHeight;
+			var w = document.getElementById(name).offsetWidth;
+			    w = w - margin.left - margin.right;
+				h = h - margin.top - margin.bottom ;
+			var general = d3.nest()
+					.key(function(d){return d['gate-name'];})
+					.key(function(d){return d['car-id'];})
+					.entries(base);
+			console.log(general)
+			
+			var links = d3.nest()
+						.key(function(d) {return d['car-id'];})
+						.key(function(d) {return d['Timestamp'];})
+						.rollup(function (v) {var arr = [];
+												for(i=0;i<v.length;i++){
+													arr.push(v[i]['gate-name']);
+												}
+											  return {"path":arr,"car":v[0]["car-id"],"type": v[0]["car-type"]}
+						})
+						.entries(base)
+			console.log(links);
+			
+			var nodesGeneral = [];
+			for (i=0;i<general.length;i++){
+				n = general[i].key 
+				obj = {"label": n}
+				nodesGeneral.push(obj);
+			}
+			nodesGeneral = nodesGeneral.sort(function(a,b){return d3.ascending(a.label,b.label)})
+			console.log(links[0].values[0].value.path)
+			var paths = [];
+			for(i=0;i<links.length;i++){
+				p1 = []
+				for(j=0;j<links[i].values.length;j++){
+					p = links[i].values[j].value.path
+					p1.push(p);
+				}
+				paths.push(p1);
+			}
+			
+			console.log(paths);
+				
+			for(i=0;i<paths.length-1;i++){
+				for(j=0
+				
+			}
+			
+			var simulation = d3
+				  .forceSimulation()
+				  .force('charge', d3.forceManyBody().strength(-10))
+				  .force('center', d3.forceCenter(w / 2, h / 2))
+							
+			var svg = d3.select("#"+name).append("svg")
+					.attr("id", "svg"+name)
+					.attr("width", w + margin.left + margin.right)
+					.attr("height", h + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			
+			var nodeElements = svg.append("g")
+					  .attr("class", "nodes")
+					  .selectAll("circle")
+					  .data(nodesGeneral)
+					  .enter().append("circle")
+						.attr("r", 5)
+						.attr("fill", "blue")
+			
+			var textElements = svg.append("g")
+					  .attr("class", "texts")
+					  .selectAll("text")
+					  .data(nodesGeneral)
+					  .enter().append("text")
+						.text(function (node) { return  node.label })
+						  .attr("font-size", 10)
+						  .attr("dx", 15)
+						.attr("dy", 4)
+			  simulation.nodes(nodesGeneral).on('tick', () => {
+				nodeElements
+				  .attr('cx', function (node) { return node.x })
+				  .attr('cy', function (node) { return node.y })
+				textElements
+				  .attr('x', function (node) { return node.x })
+				  .attr('y', function (node) { return node.y })
+			  })
+					  
+			
+})
+}
