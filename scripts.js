@@ -2,7 +2,7 @@ var margin = {top: 40, right: 20, bottom: 50, left: 60};
 
 var currentGraphs = {"a": "bar", "b": "scatter", "c":"time","d":"none",
 					"inputA":"a","inputB":"b","inputC":"c","inputD":"none",
-					"filterA": "none", "filterB":"none"};
+					"filterA": "none", "filterB":"none",filterC:"none"};
 					
 function initChangeA(){
 		var s = document.getElementById("filterA");
@@ -152,14 +152,11 @@ function multiLine(data,name) {
 			}
 			
 			//console.log(cols);		
-			var line = d3.line()
-						.x(function(d,i){return x(d.month)})
-						.y(function(d,i) {return y(d.value);})			
+	
 			
 			var da0 = [];
 				for (var j=0; j< data[0].values.length; j++){
 					var linedata = {"type": data[0].key,"month": data[0].values[j].key, "value":+data[0].values[j].value}
-					console.log(data[0].values[j]);
 					da0.push(linedata);
 					months[j] = data[0].values[j].key;
 				}
@@ -194,6 +191,8 @@ function multiLine(data,name) {
 					var linedata = {"type": data[6].key,"month": data[6].values[j].key, "value":+data[6].values[j].value}
 					da6.push(linedata);
 				}			
+			
+			console.log(data);
 			var svg = d3.select("#"+name).append("svg")
 					.attr("id", "svg"+name)
 					.attr("width", w + margin.left + margin.right)
@@ -223,65 +222,61 @@ function multiLine(data,name) {
 			svg.append("g")
 			  .style("font","8px times")
 			  .call(d3.axisLeft(y))
-				
-			svg.append("path")
-				.datum(da0)
-				.attr("fill","none")
-				.attr("stroke",z(da0[0].type))
-				.attr("class","line")
-				.attr("stroke-width",2)
+			var base = data;
+			var circlesGr = svg.selectAll(".circleGroups")
+								.data(base) 
+								.enter()
+								.append("g")
+								.attr("fill",function(d){return z(d.key)})
+
+			var circles = circlesGr.selectAll(".circles")
+									.data(function(d){return d.values})
+									.enter()
+									.append("circle")
+									
+				circles.attr("r",2)
+						.attr("cx",function(d){return x(d.key)})
+						.attr("cy",function(d){return y(d.value)})
 			
-			svg.append("path")
-				.datum(da1)
-				.attr("fill","none")
-				.attr("stroke",z(da1[0].type))
-				.attr("class","line")
-				.attr("stroke-width",2)
-				.attr("d",line);
+			var line = d3.line()
+						.x(function(d,i){return x(d.key)})
+						.y(function(d,i) {return y(d.value);})		
 			
-			svg.append("path")
-				.datum(da2)
-				.attr("fill","none")
-				.attr("stroke",z(da2[0].type))
-				.attr("class","line")
-				.attr("stroke-width",2)
-				.attr("d",line);
-			
-			svg.append("path")
-				.datum(da3)
-				.attr("fill","none")
-				.attr("stroke",z(da3[0].type))
-				.attr("class","line")
-				.attr("stroke-width",2)
-				.attr("d",line);
-			
-			svg.append("path")
-				.datum(da4)
-				.attr("fill","none")
-				.attr("stroke",z(da4[0].type))
-				.attr("class","line")
-				.attr("stroke-width",2)
-				.attr("d",line);
-			
-			svg.append("path")
-				.datum(da5)
-				.attr("fill","none")
-				.attr("stroke",z(da5[0].type))
-				.attr("class","line")
-				.attr("stroke-width",2)
-				.attr("d",line);
-			
-			svg.append("path")
-				.datum(da6)
-				.attr("fill","none")
-				.attr("stroke",z(da6[0].type))
-				.attr("class","line")
-				.attr("stroke-width",2)
-				.attr("d",line);			
-			
+			var pathsGroup = svg.selectAll(".pathsGroup")
+								.data(base)
+								.enter()
+								.append("g")
+								.attr("fill","none")
+								.attr("stroke",function(d){console.log(d);return z(d.key)})
+						
+			var paths = pathsGroup.selectAll(".paths")
+									.data(function(d){return [d.values]})
+									.enter()
+									.append("path")
+									.attr("d",line)
+									.attr("class","line")
+									.attr("stroke-width",2)
+									.attr("id",function(d,i){return "line";})
+														
+							/*		o = d3.selectAll(".line")
+									o.each(function(d,i){
+										var totalLength = d3.select("#line").getTotalLength;
+										console.log(totalLength);
+										d3.selectAll("#line"+i).attr("stroke-dasharray", totalLength + " " + totalLength)
+																  .attr("stroke-dashoffset", totalLength)
+																  .transition()
+																  .duration(2000)
+									})	
+			/*	
+				d3.select.attr("stroke-dasharray",function(d){totalLength = x(d.length); return(totalLength + " " + totalLength)})
+						  .attr("stroke-dashoffset", 0)
+						  .transition()
+							.duration(2000)
+							.attr("stroke-dashoffset",totalLength)
+						*/	
 			var legendRect = 18;
 			var legendSpacing = 4;
-			
+		
 			legend = svg.selectAll('.legend')                     
 			  .data([da0,da1,da2,da3,da4,da5,da6])                                
 			  .enter()                                                
@@ -607,11 +602,13 @@ function handleMouseOut(d)
   svg.selectAll("#tooltip").remove(); //removes tooltip on mouse out
       
 }
-
+//controlla perchè reduce è rotta
 function time(name){
 	d3.csv("Lekagul Sensor Data.csv").then(function(data){
 			var base = data;
-		//	console.log(base);
+			currentGraphs.c = "time";
+			currentGraphs.inputC = name;
+			currentGraphs.filterC = "none";
 			var ordered = d3.nest()
 					.key(function(d){return d['Timestamp'];})
 					.entries(data);
@@ -665,7 +662,7 @@ function time(name){
 						.x(function(d,i) {return x(i);})
 						.y(function(d) {return y(d.values.length);})
 						;//.curve(d3.curveCardinal);
-
+			
 			
 			var svg = d3.select("#"+name).append("svg")
 					.attr("id", "svg"+name)
@@ -699,17 +696,24 @@ function time(name){
 				  .style("text-anchor", "middle")
 				  .text("Traffic (# of readings)");
 			
-			svg.append("path")
+		var path = svg.append("path")
 				.datum(ordered1)
 				.attr("fill","none")
 				.attr("stroke", "steelblue")
 				.attr("class","line")
 				.attr("stroke-width",1.5)
 				.attr("d",line);
+		
+		var totalLength = path.node().getTotalLength();
+			
+			  path.attr("stroke-dasharray", totalLength + " " + totalLength)
+				  .attr("stroke-dashoffset", totalLength)
+				  .transition()
+					.duration(2000)
+					.attr("stroke-dashoffset", 0);
+
 	});
 };
-
-
 
 
 function scatter(name,filter){
@@ -861,7 +865,7 @@ function scatter(name,filter){
 															.style("r",12)
 															.attr("stroke","black")
 															.attr("stroke-width",6)
-													    tooldiv.transition().duration(200).style("opacity",.9);
+													    tooldiv.transition().duration(500).style("opacity",.9);
 														if(d.days.length > 5){
 															tooldiv.style("width","400px")
 														} else {
@@ -1147,14 +1151,58 @@ function force(name,filter) {   // il force graph sarà un "dettaglio" venuto fu
 				}
 				paths.push(p1);
 			}
-			
-			console.log(paths);
-				
-			for(i=0;i<paths.length-1;i++){
-				for(j=0
-				
+			listeroni = [];
+			//ottieni dati del traffico per ogni singola tratta
+			for(k=0;k<links.length;k++){
+				var list = [];
+				for(j=0;j<paths[k].length;j++){
+					for(i=0;i<paths[k][j].length-1;i++){
+							curr = paths[k][j][i]
+							next = paths[k][j][i+1]
+							//console.log(curr,next);
+/*							if(list.length == 0) {
+								obj = {"origin":curr, "dest":next, "count":1}
+								list.push(obj);
+								} else {								
+									contained(list,curr,next);
+								}
+*/							obj = {"origin":curr, "dest":next, "count":1}
+							list.push(obj);
+					}
+				}
+				listeroni.push(list);
 			}
-			
+			//cerco di ottenere i dati di traffico "generali" i.e. quante macchine fanno il percorso a->b (un passo di lunghezza)
+/*				for(i=0;i<paths[0][0].length-1;i++){
+					curr = paths[0][0][i]
+					next = paths[0][0][i+1]
+					if(list.length = 0){
+						obj = {"origin":curr, "dest":next, "count":1}
+						list.push(obj);
+					} else if(contained(list,curr,next)) {
+						list[i].count = list[i].count + 1;
+					} else {
+						obj = {"origin":curr, "dest":next, "count":1}
+						list.push(obj);
+					}
+				}
+*/
+//toooooooooooooooooooo heavy, split dati potrebbe aiutare... puoi fare in modo che si possa selezionare tipo il mese/la settimana 
+//e vai a caricare quei dati li e basta, dovrebbe farcela? quindi dipenderebbe tutto dal filtro della timeseries
+	function contained(list,current,next){
+				mod = false;
+				for(i=0;i<list.length;i++){
+					if (current == list[i].origin && next == list[i].dest){
+						list[i].count = list[i].count +1;
+						mod = true;
+					}
+				}
+				if(!mod){
+				obj = {"origin":current, "dest":next, "count":1}
+				list.push(obj);
+				}
+	}
+
 			var simulation = d3
 				  .forceSimulation()
 				  .force('charge', d3.forceManyBody().strength(-10))
